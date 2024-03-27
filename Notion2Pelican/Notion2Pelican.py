@@ -24,7 +24,8 @@ def get_notion_headers(token):
 
 
 def readDatabase(databaseId, notion_header, print_res=False):
-    """
+    """ reads the database (identified by Notion with databaseId) and returns the structure as a json
+
     Parameters
     -----------
     databaseId: str

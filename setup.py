@@ -56,6 +56,7 @@ setup(
             "darglint",
             "python-dotenv",
             "flake8",
+            "Markdown",
             "pyroma",
             "pelican",
             "pytest",

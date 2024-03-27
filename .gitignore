@@ -1,6 +1,9 @@
 *.egg-info/
 venv/
 build/
+tmp/
 *.env
 out/
-tests/*.json
+*db.json
+*/__pycache__
+.coverage

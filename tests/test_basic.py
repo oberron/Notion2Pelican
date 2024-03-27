@@ -6,7 +6,7 @@ import pathlib
 from Notion2Pelican.Notion2Pelican import readDatabase, page_tree_ids
 from Notion2Pelican.Notion2Pelican import get_notion_headers, pageid_2_md
 
-dp_TMP = abspath(join(__file__, pardir, pardir, "out"))
+dp_TMP = abspath(join(__file__, pardir, pardir, "tmp"))
 pathlib.Path(dp_TMP).mkdir(parents=True, exist_ok=True) 
 
 def test_import_non_reg():

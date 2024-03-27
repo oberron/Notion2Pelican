@@ -2,7 +2,36 @@
 
 Import Notion Pages into a Pelican compatible folder structure and files
 
+> [!IMPORTANT]  
+> For this to work you need the ID of your notion database and the key which are available
+> from your notion dashboard
+
+## Examples
+
+See the ./docs folder for minimalist code which imports a Notion DB into a pelican blogging and generates the static site.
+
+> [!IMPORTANT]  
+> The below example relies on the secrets to be in a local .env file (which containing secrets has to be created for each machine)
+> with the following keys: `FT_dbid` the ID of your database `NOTIONKEY` which usually starts with `secret_` and is available from your 
+> Notion dashboard
+
+> cd docs
+> python example.py
+
+
 ## Release Notes and Roadmap
+
+### v0.0.1 (first release)
+
+Supports:
+
+* Titles (H1, H2, )
+* Bulleted items
+* images 
+
+### Upcoming
+
+### Roadmap
 
 ## Release process
 
