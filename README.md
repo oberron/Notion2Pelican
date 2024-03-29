@@ -6,6 +6,14 @@ Import Notion Pages into a Pelican compatible folder structure and files
 > For this to work you need the ID of your notion database and the key which are available
 > from your notion dashboard
 
+1. how to get the ID:
+https://docs.tooljet.com/docs/data-sources/notion/#:~:text=Database%20ID%3A%20You'll%20find,ZZZ%20is%20the%20page%20ID.
+
+2. how to get the secret:
+https://docs.tooljet.com/docs/data-sources/notion/#:~:text=Database%20ID%3A%20You'll%20find,ZZZ%20is%20the%20page%20ID.
+
+3. Select the page and grant access to the connection (to right ..., select Connections, Connect to, type the name of your integration).
+
 ## Examples
 
 See the ./docs folder for minimalist code which imports a Notion DB into a pelican blogging and generates the static site.
