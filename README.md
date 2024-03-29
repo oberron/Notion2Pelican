@@ -90,8 +90,8 @@ should yield 100% pass
 
 11. check on google colab it works
 
-12. release on pypi
-> twine upload -r pypi dist\*
+12. release on pypi (assumes your pypirc is local to the project)
+> twine upload -r pypi --config-file=.\.pypirc dist\*
 
 13. check on colab that pypi package works:
 

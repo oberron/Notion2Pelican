@@ -6,4 +6,6 @@ tmp/
 out/
 *db.json
 */__pycache__
+dist/*
 .coverage
+.pypirc
