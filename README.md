@@ -29,7 +29,15 @@ See the ./docs folder for minimalist code which imports a Notion DB into a pelic
 
 ## Release Notes and Roadmap
 
-### v0.0.1 (first release)
+v0.0.2 - adding support for
+
+* add support for H1 (which was not present)
+* numbered list (which was not working)
+* italic and bold (which was not available)
+* non regression for images (though it was working)
+* add support for quotes
+
+v0.0.1 (first release)
 
 Supports:
 
