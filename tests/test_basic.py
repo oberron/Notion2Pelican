@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
+import json
 from os import getenv
-from os.path import abspath, join, pardir
+from os.path import abspath, exists, join, pardir
 import pathlib
 
 from Notion2Pelican.Notion2Pelican import readDatabase, page_tree_ids
@@ -19,9 +20,26 @@ def test_import_non_reg():
     FT_dbid = getenv("FT_dbid")
 
     headers = get_notion_headers(MY_NOTION_SECRET)
-    res = readDatabase(databaseId=FT_dbid,
-                       notion_header=headers)
-    site_tree = page_tree_ids(res, headers)
+    fp = abspath(join(__file__, pardir, "db.json"))
+    if not exists(fp):
+        print("downloading db.json")
+        res = readDatabase(databaseId=FT_dbid,
+                           notion_header=headers,
+                           fp=fp)
+    else:
+        print("loading db.json")
+        with open(fp, 'r') as fi:
+            fc = fi.read()
+        res = json.loads(fc)
+    fpst = abspath(join(__file__, pardir, "site_tree.json"))
+    if exists(fpst):
+        print("site_tree local opening")
+        with open(fpst, "r", encoding="utf-8") as fi:
+            fc = fi.read()
+        site_tree = json.loads(fc)
+    else:
+        print("downloading site_tree")
+        site_tree = page_tree_ids(res, headers, fp=fpst)
     for page in site_tree:
         if page["children"]:
             folder = page["title"]
@@ -31,17 +49,22 @@ def test_import_non_reg():
                 if not child_id == "5a763841-b62f-4388-8ad3-0d41f7bf03f3":
                     continue
                 child_title = child["title"]
-
+                fp = abspath(join(__file__, pardir, f"{child_id}.json"))
                 # get the page notion structure
-                res_t = readDatabase(databaseId=child_id,
-                                     notion_header=headers,
-                                     print_res=False)
+                if exists(fp):
+                    with open(fp, "r") as fi:
+                        page_json = json.loads(fi.read())
+                else:
+                    page_json = readDatabase(databaseId=child_id,
+                                         notion_header=headers,
+                                         print_res=False,
+                                         fp=fp)
                 # generate the front matter needed by pelican
                 front_matter = {"title": child_title,
                                 "page_id": child_id
                                 }
                 # generate the markdown
-                md = pageid_2_md(front_matter, res_t)
+                md = pageid_2_md(front_matter, page_json, debug=False)
                 # load the golden reference for comparison
                 # check against golden generated file stored locally
 
@@ -56,6 +79,8 @@ def test_import_non_reg():
                     with open(f"{child_id}_fail.md", 'w') as fo:
                         fo.write(md)
                     raise
+                else:
+                    print(".md generated is without regressions")
 
 if __name__ == "__main__":
     test_import_non_reg()
