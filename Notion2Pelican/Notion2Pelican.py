@@ -1,4 +1,5 @@
 import json
+from os.path import abspath, join, pardir
 import requests
 import re
 
@@ -23,7 +24,7 @@ def get_notion_headers(token):
     return headers
 
 
-def readDatabase(databaseId, notion_header, print_res=False):
+def readDatabase(databaseId, notion_header, print_res=False, fp=None):
     """ reads the database (identified by Notion with databaseId) and returns the structure as a json
 
     Parameters
@@ -34,6 +35,8 @@ def readDatabase(databaseId, notion_header, print_res=False):
         header sent via REST url
     print_res: bool
         if True prints debug messages
+    fp: str
+        file path where the json result should be saved, defaults to "db.json"
 
     Returns
     -------
@@ -47,13 +50,15 @@ def readDatabase(databaseId, notion_header, print_res=False):
     -H "Notion-Version: 2022-06-28"
     """
     read_url = f"https://api.notion.com/v1/blocks/{databaseId}/children?page_size=100"  # noqa E501
+    if fp is None:
+        fp = abspath(join(__file__, pardir, "db.json"))
 
     res = requests.request("GET", read_url, headers=notion_header)
     data = res.json()
     html_response = res.status_code
 
     if html_response == 200:  # res.status_code
-        with open('./db.json', 'w', encoding='utf8') as f:
+        with open(fp, 'w', encoding='utf8') as f:
             f.write(json.dumps(data, indent=4))
         if print_res:
             print("print res >>>>>>>>>>>>>")
@@ -62,7 +67,7 @@ def readDatabase(databaseId, notion_header, print_res=False):
     return data
 
 
-def page_tree_ids(res, headers):
+def page_tree_ids(res, headers, fp=None):
     """ parses the Notion DB json into a tree
 
     Parameters
@@ -71,7 +76,8 @@ def page_tree_ids(res, headers):
         json returned by NOTION API
     headers: json
         headers used for parameters in REST API
-
+    fp: str
+        file path where the json result should be saved, defaults to "db.json"
     Returns
     -------
     children_ids : list of dict
@@ -92,6 +98,10 @@ def page_tree_ids(res, headers):
                                  "children": children}
                 children_ids.append(children_page)
 
+    if fp is None:
+        fp = abspath(join(__file__, pardir, "page_id.json"))
+    with open(fp, "w", encoding="utf-8") as fo:
+        fo.write(json.dumps(children_ids, indent=4))
     return children_ids
 
 
@@ -108,7 +118,7 @@ def para_2_md(paragraph):
     md: str
         markdown encoded in string version of the paragrap
     """
-    md = "\n"
+    md = ""
 
     for para in paragraph:
         if para == "rich_text":
@@ -119,16 +129,28 @@ def para_2_md(paragraph):
                         link = para_block["text"]["link"]["url"]
                         md += f"[{content}]({link})"
                     else:
-                        md += f"{content}"
+                        # md += f"{content}"
+                        raw_content = content
+                        for annotation in para_block["annotations"]:
+                            if para_block["annotations"][annotation]:
+                                if annotation == "bold":
+                                    raw_content = f"**{raw_content}**"
+                                elif annotation == "italic":
+                                    raw_content = f"*{raw_content}*"
+                                elif annotation == "strikethrough":
+                                    raw_content = f"~~{raw_content}~~"
+                                elif annotation == "underline":
+                                    raw_content = f"__{raw_content}__"
+                        md += raw_content
                 if "mention" in para_block:
                     plain_text = para_block["plain_text"]
                     url = para_block["href"]
                     md += f"[{plain_text}]({url})"
-    md += "\n"
+    # md += "\n"
     return md
 
 
-def pageid_2_md(front_matter, res):
+def pageid_2_md(front_matter, res, debug=False):
     """ generates markdown with front matter from notion json
 
     Parameters
@@ -143,6 +165,9 @@ def pageid_2_md(front_matter, res):
     md: str
         Markdown formatted page
     """
+
+    known_btype = ["heading_1", "heading_2", "paragraph", "bulleted_list_item", "numbered_list_item", "image"]
+
     # FIXME: 56c2ac88fa7c49d8859c44ce68eca68b
 
     if "status" not in front_matter:
@@ -163,11 +188,18 @@ last_updated: {res["results"][0]['last_edited_time']}
     prev_btype = ""
 
     for block in res["results"]:
-        # print(block["type"])
         btype = block["type"]
-        bullet_index = 0
+        if debug:
+            print("btype", btype)
+        md_txt = para_2_md(block[btype])
+
+        if btype != "numbered_list_item":
+            bullet_index = 0
+        
         if btype == "paragraph":  # in block:
-            md += para_2_md(block[btype])
+            md += f"\n{md_txt}\n"
+        elif btype == "heading_1":
+            md += f"\n# {md_txt}\n\n"
         elif btype == "heading_2":  # in block:
             """ "heading_2": {
                     "rich_text": [
@@ -175,24 +207,29 @@ last_updated: {res["results"][0]['last_edited_time']}
                             "type": "text",
                             "text": {
                                 "content": """
-            head2 = block["heading_2"]["rich_text"][0]["text"]["content"]
+            head2 = md_txt # block["heading_2"]["rich_text"][0]["text"]["content"]
             # print("head2",head2)
             md += f"\n## {head2}\n\n"
         elif btype == "heading_3":  # in block:
-            head3 = block["heading_3"]["rich_text"][0]["text"]["content"]
+            head3 = md_txt # block["heading_3"]["rich_text"][0]["text"]["content"]
             # print("head2",head2)
             md += f"\n### {head3}\n\n"
         elif btype == "bulleted_list_item":
             # bull = block[btype]["rich_text"]
-            bulletpoint = block[btype]["rich_text"][0]["text"]["content"]
+            bulletpoint = md_txt #block[btype]["rich_text"][0]["text"]["content"]
             md += f"* {bulletpoint}\n"
         elif btype == "numbered_list_item":
-            bulletpoint = block[btype]["rich_text"][0]["text"]["content"]
+            bulletpoint = md_txt #block[btype]["rich_text"][0]["text"]["content"]
+            # print("!!!!!!!!!!!!!", prev_btype, btype, bullet_index)
             if prev_btype == btype:
                 bullet_index += 1
+                md += f"{bullet_index}. {bulletpoint}\n"
             else:
                 bullet_index = 1
-            md += f"{bullet_index}. {bulletpoint}\n"
+                md += f"\n{bullet_index}. {bulletpoint}\n"
+        elif btype == "quote":
+            quote_text = md_txt  # block[btype]["rich_text"][0]["text"]["content"]
+            md += f"\n> {quote_text}\n"
         elif btype == "image":
             caption = ""
             for c in block["image"]["caption"]:
