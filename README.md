@@ -23,11 +23,19 @@ See the ./docs folder for minimalist code which imports a Notion DB into a pelic
 > with the following keys: `FT_dbid` the ID of your database `NOTIONKEY` which usually starts with `secret_` and is available from your 
 > Notion dashboard
 
+> [!IMPORTANT]  
+> Integrations have a scope of the workspace they are created for
+
 > cd docs
 > python example.py
 
 
 ## Release Notes and Roadmap
+
+v0.0.3 - adding support for:
+
+* download images locally
+* download DB into .csv
 
 v0.0.2 - adding support for
 

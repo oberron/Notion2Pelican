@@ -1,3 +1,3 @@
 [flake8]
-exclude = .git,__pycache__,old,build,dist,.pytest_cache,.tox,venv,venv_dev
+exclude = .git,__pycache__,old,build,dist,.pytest_cache,.tox,venv,venv_dev,tests\dev_tests.py
 docstring_style=numpy

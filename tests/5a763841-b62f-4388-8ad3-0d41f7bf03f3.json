@@ -1612,8 +1612,8 @@
                 ],
                 "type": "file",
                 "file": {
-                    "url": "https://prod-files-secure.s3.us-west-2.amazonaws.com/7f35e08f-716e-4cce-94e2-2f47dac447ed/890539ef-92c9-4fa8-9422-1e0c589cdab5/New_York_Stock_Exchange_-_panoramio.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45HZZMZUHI%2F20240413%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240413T125905Z&X-Amz-Expires=3600&X-Amz-Signature=7e82710693c668989be3548de0515d06ae079a3010a1b6c7e134d30edee74569&X-Amz-SignedHeaders=host&x-id=GetObject",
-                    "expiry_time": "2024-04-13T13:59:04.939Z"
+                    "url": "https://prod-files-secure.s3.us-west-2.amazonaws.com/7f35e08f-716e-4cce-94e2-2f47dac447ed/890539ef-92c9-4fa8-9422-1e0c589cdab5/New_York_Stock_Exchange_-_panoramio.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45HZZMZUHI%2F20240510%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240510T143822Z&X-Amz-Expires=3600&X-Amz-Signature=aa94b9f41d5f82d62c293c9f462d70012ab0d9e7cfcd6ab039ec3a7b2f059884&X-Amz-SignedHeaders=host&x-id=GetObject",
+                    "expiry_time": "2024-05-10T15:38:22.259Z"
                 }
             }
         },
@@ -1666,5 +1666,5 @@
     "has_more": false,
     "type": "block",
     "block": {},
-    "request_id": "70f30868-b5e0-4230-876d-3079419879ff"
+    "request_id": "58b2e819-8628-40b4-b4b7-8de35893ce70"
 }

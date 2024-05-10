@@ -9,3 +9,4 @@ out/
 dist/*
 .coverage
 .pypirc
+tests/dev_tests.py

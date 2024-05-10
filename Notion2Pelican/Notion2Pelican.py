@@ -45,11 +45,12 @@ def readDatabase(databaseId, notion_header, print_res=False, fp=None):
 
     Documentation:
     --------------
-    curl https://api.notion.com/v1/blocks/16d8004e-5f6a-42a6-9811-51c22ddada12/children?page_size=100 \  # noqa E501
+    curl https://api.notion.com/v1/blocks/16d8004e-5f6a-42a6-9811-51c22ddada12/children?page_size=100  # noqa E501
     -H 'Authorization: Bearer '"$NOTION_API_KEY"'' \
     -H "Notion-Version: 2022-06-28"
     """
     read_url = f"https://api.notion.com/v1/blocks/{databaseId}/children?page_size=100"  # noqa E501
+
     if fp is None:
         fp = abspath(join(__file__, pardir, "db.json"))
 
@@ -64,6 +65,9 @@ def readDatabase(databaseId, notion_header, print_res=False, fp=None):
             print("print res >>>>>>>>>>>>>")
             print(json.dumps(data, indent=4))
             print("print res <<<<<<<<<<<<<<")
+    else:
+        print("failed to download db: html_response={html_response}")
+        print(res)
     return data
 
 
@@ -87,9 +91,9 @@ def page_tree_ids(res, headers, fp=None):
     children_ids = []
     for b in res["results"]:
         page_title = ""
-
         if "child_page" in b:
             if b["has_children"]:
+                print(98)
                 id1 = b["id"]
                 page_title = b["child_page"]["title"]
                 res1 = readDatabase(id1, headers, print_res=False)
@@ -150,7 +154,46 @@ def para_2_md(paragraph):
     return md
 
 
-def pageid_2_md(front_matter, res, debug=False):
+def get_img(url, dpo):
+    """ attempts to download the image locally, upon success returns the path
+    if failed returns None
+
+    Parameters
+    ----------
+    url: str
+        the url path on AWS with temp token used by Notion
+    dpo: str
+        the path where the image should be serialized if download successful
+
+    Returns
+    -------
+    fpo: str
+        if None indicates failed download, else the path where the image is
+    """
+    import os
+    from urllib.parse import urlparse
+    from requests import get
+
+    a = urlparse(url)
+    # Output:
+    # /7f35e08f-716e-4cce-94e2-2f47dac447ed/890539ef-92c9-4fa8-9422-1e0c589cdab5/
+    # New_York_Stock_Exchange_-_panoramio.jpg
+    fn = os.path.basename(a.path)
+    # Output: 09-09-201315-47-571378756077.jpg
+    # > New_York_Stock_Exchange_-_panoramio.jpg
+    fp = abspath(join(dpo, fn))
+    fpo = None
+    res = get(url)
+    if res.ok:
+        with open(fp, mode="wb") as fo:
+            fo.write(res.content)
+        fpo = fn
+    return fpo
+
+
+def pageid_2_md(front_matter, res,
+                dp_img=None, rsc_folder="",
+                debug=False):
     """ generates markdown with front matter from notion json
 
     Parameters
@@ -159,6 +202,13 @@ def pageid_2_md(front_matter, res, debug=False):
         the page title as the title is not in the json object
     res: json
         json returned by the NOTION API
+    dp_img: str
+        the path where images should be stored once downloaded
+    rsc_folder: str
+        the path prefix to be added to the filename for pelican to generate
+        appropriate hmtl
+    debug: bool
+        if True outputs more info
 
     Returns
     --------
@@ -166,9 +216,13 @@ def pageid_2_md(front_matter, res, debug=False):
         Markdown formatted page
     """
 
-    known_btype = ["heading_1", "heading_2", "paragraph", "bulleted_list_item", "numbered_list_item", "image"]
+    img_local = False
+    if dp_img is not None:
+        img_local = True
 
-    # FIXME: 56c2ac88fa7c49d8859c44ce68eca68b
+    known_btype = ["bulleted_list_item",
+                   "heading_1", "heading_2", "heading_3", "image",
+                   "numbered_list_item", "paragraph", "quote"]
 
     if "status" not in front_matter:
         front_matter["status"] = "published"
@@ -189,13 +243,15 @@ last_updated: {res["results"][0]['last_edited_time']}
 
     for block in res["results"]:
         btype = block["type"]
+        if btype not in known_btype:
+            print(f"unknown btype: {btype}")
         if debug:
             print("btype", btype)
         md_txt = para_2_md(block[btype])
 
         if btype != "numbered_list_item":
             bullet_index = 0
-        
+
         if btype == "paragraph":  # in block:
             md += f"\n{md_txt}\n"
         elif btype == "heading_1":
@@ -207,19 +263,19 @@ last_updated: {res["results"][0]['last_edited_time']}
                             "type": "text",
                             "text": {
                                 "content": """
-            head2 = md_txt # block["heading_2"]["rich_text"][0]["text"]["content"]
+            head2 = md_txt
             # print("head2",head2)
             md += f"\n## {head2}\n\n"
         elif btype == "heading_3":  # in block:
-            head3 = md_txt # block["heading_3"]["rich_text"][0]["text"]["content"]
+            head3 = md_txt
             # print("head2",head2)
             md += f"\n### {head3}\n\n"
         elif btype == "bulleted_list_item":
             # bull = block[btype]["rich_text"]
-            bulletpoint = md_txt #block[btype]["rich_text"][0]["text"]["content"]
+            bulletpoint = md_txt
             md += f"* {bulletpoint}\n"
         elif btype == "numbered_list_item":
-            bulletpoint = md_txt #block[btype]["rich_text"][0]["text"]["content"]
+            bulletpoint = md_txt
             # print("!!!!!!!!!!!!!", prev_btype, btype, bullet_index)
             if prev_btype == btype:
                 bullet_index += 1
@@ -228,14 +284,18 @@ last_updated: {res["results"][0]['last_edited_time']}
                 bullet_index = 1
                 md += f"\n{bullet_index}. {bulletpoint}\n"
         elif btype == "quote":
-            quote_text = md_txt  # block[btype]["rich_text"][0]["text"]["content"]
+            quote_text = md_txt
             md += f"\n> {quote_text}\n"
         elif btype == "image":
             caption = ""
             for c in block["image"]["caption"]:
                 caption += c["plain_text"]
             url = block["image"][block["image"]["type"]]["url"]
-            img = f"![{caption}]({url})\n\n"
+            if img_local:
+                fn = get_img(url, dp_img)
+                img = f"![{caption}]({rsc_folder}{fn})\n\n"
+            else:
+                img = f"![{caption}]({url})\n\n"
             md += img
         prev_btype = btype
     return md

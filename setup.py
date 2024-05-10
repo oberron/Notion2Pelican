@@ -33,7 +33,8 @@ setup(
     license='LICENSE',
     keywords='Notion Pelican',
     packages=['Notion2Pelican'],
-    package_dir={'Notion2Pelican': abspath(join(__file__, pardir, "Notion2Pelican"))},
+    package_dir={'Notion2Pelican': abspath(join(__file__, pardir,
+                                                "Notion2Pelican"))},
     python_requires='>=3.8',
     classifiers=[
                 "Development Status :: 3 - Alpha",
